@@ -15,6 +15,10 @@ class testCrawler extends crawler {
     }
     onCurrentPage {
       result = from(div having id("resultStats")) getTextContent
+      
+      forAll(div having xPath("""//ol[@id = "rso"]/li/div[@class = "vsc"]""")) {
+        println(from(anchor having xPath("h3/a")) getTextContent)
+      }
     }
   }
 }
