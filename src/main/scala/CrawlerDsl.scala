@@ -180,8 +180,7 @@ class AnchorProcessor(c: crawler, dType: DiscriminatorType)
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
       case dt: xPath => { 
-        parentElement.asInstanceOf[HtmlPage].
-          getFirstByXPath[HtmlAnchor](dt.xPath) 
+        parentElement.getFirstByXPath[HtmlAnchor](dt.xPath) 
       }
       case dt: text => {
         parentElement.asInstanceOf[HtmlPage].getAnchorByText(dt.text) 
