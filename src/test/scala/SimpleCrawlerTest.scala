@@ -1,6 +1,6 @@
 import org.specs._
 
-class testCrawler extends crawler {
+class TestCrawler extends Crawler {
   var result = ""
   def crawl = {
     navigateTo("http://www.google.com") {
@@ -25,7 +25,7 @@ class testCrawler extends crawler {
 
 object SimpleCrawlerTest extends Specification {
   "Vanity Googling for bplawler" should {
-    val c = new testCrawler
+    val c = new TestCrawler
     c.crawl
     "give me search results that start with 'About'" in {
       c.result must startWith("About")

@@ -18,32 +18,32 @@ import scala.collection.JavaConversions._
  * do something. 
  */
 object form {
-  def having(dType: DiscriminatorType)(implicit c: crawler) =
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new FormProcessor(c, dType)
 }
 
 object textField {
-  def having(dType: DiscriminatorType)(implicit c: crawler) =
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new TextFieldProcessor(c, dType)
 }
 
 object image {
-  def having(dType: DiscriminatorType)(implicit c: crawler) =
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new ImageInputProcessor(c, dType)
 }
 
 object anchor {
-  def having(dType: DiscriminatorType)(implicit c: crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
     new AnchorProcessor(c, dType)
 }
 
 object div {
-  def having(dType: DiscriminatorType)(implicit c: crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
     new DivProcessor(c, dType)
 }
 
 object submit {
-  def having(dType: DiscriminatorType)(implicit c: crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
     new SubmitProcessor(c, dType)
 }
 
@@ -69,7 +69,7 @@ case class text(text: String) extends DiscriminatorType
  * certain HTML node in the DOM tree.
  */
 abstract class ElementProcessor(
-         val crawler: crawler = null, 
+         val crawler: Crawler = null, 
          val discriminatorType: DiscriminatorType = null) 
 {
  /**
@@ -90,7 +90,7 @@ abstract class ElementProcessor(
  /**
   * List resolution is a special case that occurs with the "forAll"
   * functionality in the DSL.  Conveniently, the underlying htmlunit call
-  * that retrieves lists by xpath is high up in the hierarchy, and the
+  * that retrieves lists by xpath is high up in the hierarchy, at the
   * DomNode level, so we can just make list resolution a general thing - 
   * we don't need to put it in the individual ElementProcessor subclasses.
   */
@@ -125,13 +125,16 @@ abstract class ElementProcessor(
   }
 }
 
-class PageProcessor(page: HtmlPage, c: crawler, dType: DiscriminatorType = null)
+/*
+ * Here are all of the ElementProcessor implementations.
+ */
+class PageProcessor(page: HtmlPage, c: Crawler, dType: DiscriminatorType = null)
  extends ElementProcessor(c, dType) {
   mainElement = page
   def resolveNode(parent: DomNode): DomNode = mainElement
 }
 
-class FormProcessor(c: crawler, dType: DiscriminatorType) 
+class FormProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
@@ -143,7 +146,7 @@ class FormProcessor(c: crawler, dType: DiscriminatorType)
   }
 }
 
-class TextFieldProcessor(c: crawler, dType: DiscriminatorType) 
+class TextFieldProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
@@ -159,7 +162,7 @@ class TextFieldProcessor(c: crawler, dType: DiscriminatorType)
   }
 }
 
-class SubmitProcessor(c: crawler, dType: DiscriminatorType) 
+class SubmitProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
@@ -175,7 +178,7 @@ class SubmitProcessor(c: crawler, dType: DiscriminatorType)
   }
 }
 
-class AnchorProcessor(c: crawler, dType: DiscriminatorType) 
+class AnchorProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
@@ -192,7 +195,7 @@ class AnchorProcessor(c: crawler, dType: DiscriminatorType)
   }
 }
 
-class ImageInputProcessor(c: crawler, dType: DiscriminatorType) 
+class ImageInputProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
@@ -204,7 +207,7 @@ class ImageInputProcessor(c: crawler, dType: DiscriminatorType)
   }
 }
 
-class DivProcessor(c: crawler, dType: DiscriminatorType) 
+class DivProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
@@ -220,30 +223,78 @@ class DivProcessor(c: crawler, dType: DiscriminatorType)
 }
 
 /**
- * The main crawler class, which servers as the base class for individual
+ * The main Crawler class, which servers as the base class for individual
  * crawls.  This class is itself an element processor as it serves as the
  * starting point for navigation, and it also provides most of the tokens
  * that are part of the crawler DSL.
  */
-class crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
+class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
               failOnJSError: Boolean = false) extends ElementProcessor
 {
-  implicit val c: crawler = this
+ /**
+  * Set up the current Crawler as an implicit value that will be 
+  * automatically filled into a method call if not provided by the
+  * caller.  This was added in order to make the Crawler instance 
+  * implicitly available to the HTMLElement object definitions.
+  */
+  implicit val c: Crawler = this
+
+ /**
+  * HtmlUnit class that actually does all the work.
+  */
   private val client = new WebClient(BrowserVersion.FIREFOX_3_6)
+ 
+ /**
+  * List of DomNode instances that functions as a stack.  As the 
+  * DSL finds nodes the user is allowed to embed operations to 
+  * perform on those nodes, including the discovery of sub-nodes
+  * within the current node.  Therefore, we need to store the
+  * notion of a current node on the stack so that when processing
+  * of the child nodes is complete we can restore this node 
+  * back into the current.
+  */
   var nodeStack = List[DomNode]()
+
+ /**
+  * Used by the navigateTo method to store the URL that the 
+  * user is trying to visit.
+  */
   private var currentUrl: String = ""
 
+ /**
+  * Specifies whether this crawler needs to be concerned about 
+  * JavaScript errors.
+  */
   client.setThrowExceptionOnScriptError(failOnJSError)
-  var currentPage: HtmlPage = null // temporary, will need a context
 
+ /**
+  * Simple implemention of resolveNode, which will simply attempt
+  * to go to the page requested by the user.
+  */
   def resolveNode(parentElement: DomNode) = {
     client.getPage[HtmlPage](currentUrl)
   }
 
+ /**
+  * Pushes a new DomNode onto the top of the stack.  This is called
+  * when the DSL has resolved a new node and now needs to push it
+  * onto the stack so that the next processing block will have
+  * access to it.
+  */
   protected def push(d: DomNode) = { nodeStack = d +: nodeStack }
 
+ /**
+  * Pops a DomNode off of the node stack.  Called when a process
+  * block for a node concludes, and we want to restore the previous
+  * node to the top of the stack.
+  */
   protected def pop = { nodeStack = nodeStack drop 1 }
 
+ /**
+  * Receives an ElementProcessor instance and the 
+  * block of code that is to be executed against the node that is resolved
+  * by that ElementProcessor.
+  */
   private def processBlock(processor: ElementProcessor)(block: => Unit) = { 
     nodeStack.length match {
       case 0 => push(processor.resolveNode(null))
@@ -253,6 +304,12 @@ class crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
     pop
   }
 
+ /** 
+  * Similar to the processBlock function, processList is a special case 
+  * function invoked by the forAll() token in this DSL.  Rather than resolve
+  * a single node, this method will resolve a list of nodes, iterate over them,
+  * and call the block of code that was passed in on each.
+  */
   private def processList(processor: ElementProcessor)(block: => Unit) = { 
     for(element <- processor.resolveList(nodeStack(0))) {
       push(element.asInstanceOf[DomNode])
@@ -261,6 +318,12 @@ class crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
     }
   }
 
+ /**
+  * Method called by the push operator (==>) which has the effect of 
+  * pushing the node parameter onto the bottom of the stack so that
+  * when the stack has been emptied, there at the very bottom will 
+  * be this new node.
+  */
   protected def pushToEnd(node: DomNode) = { nodeStack = nodeStack :+ node }
 
   def navigateTo(url: String) = {
