@@ -6,5 +6,5 @@ scalaVersion := "2.8.1"
 
 libraryDependencies ++= Seq (
     "net.sourceforge.htmlunit" % "htmlunit" % "2.9"
-  , "org.scala-tools.testing" % "specs_2.8.1" % "1.6.6" % "test"
+  , "org.scala-tools.testing" %% "specs" % "1.6.6" % "test"
 )
