@@ -1,3 +1,5 @@
+package crawler
+
 import com.gargoylesoftware.htmlunit._
 import com.gargoylesoftware.htmlunit.html._
 import scala.collection.JavaConversions._
