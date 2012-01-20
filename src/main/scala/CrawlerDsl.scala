@@ -60,6 +60,7 @@ object submit {
 abstract class DiscriminatorType
 case class id(id: String) extends DiscriminatorType
 case class name(name: String) extends DiscriminatorType
+case class title(title: String) extends DiscriminatorType
 case class xPath(xPath: String) extends DiscriminatorType
 case class text(text: String) extends DiscriminatorType
 
@@ -193,6 +194,9 @@ class AnchorProcessor(c: Crawler, dType: DiscriminatorType)
       case dt: id => {
         parentElement.asInstanceOf[HtmlPage].getElementById(dt.id) 
       }
+      case dt: title => {
+        parentElement.getFirstByXPath[HtmlAnchor]("""//a[@title="%s"]""".format(dt.title))
+      }
     }
   }
 }
@@ -283,7 +287,10 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * onto the stack so that the next processing block will have
   * access to it.
   */
-  protected def push(d: DomNode) = { nodeStack = d +: nodeStack }
+  protected def push(d: DomNode) = { 
+    println("Pushing: %s".format(d))
+    nodeStack = d +: nodeStack 
+  }
 
  /**
   * Pops a DomNode off of the node stack.  Called when a process
@@ -343,11 +350,14 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   }
 
   def click = {
-    new PageProcessor(
-      nodeStack(0).asInstanceOf[HtmlElement].click[HtmlPage](), this)
+    val stackItem = nodeStack(0)
+    val element = stackItem.asInstanceOf[HtmlElement]
+    val clickResult = element.click[HtmlPage]()
+    new PageProcessor(clickResult, this)
   }
 
   def in(processor: ElementProcessor) = {
+    println("in: %s dt is %s".format(processor, processor.discriminatorType))
     processBlock(processor) _
   }
 
