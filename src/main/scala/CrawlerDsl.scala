@@ -31,7 +31,7 @@ object textField {
 
 object image {
   def having(dType: DiscriminatorType)(implicit c: Crawler) =
-    new ImageInputProcessor(c, dType)
+    new ImageProcessor(c, dType)
 }
 
 object anchor {
@@ -47,6 +47,11 @@ object div {
 object submit {
   def having(dType: DiscriminatorType)(implicit c: Crawler) = 
     new SubmitProcessor(c, dType)
+}
+
+object area {
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+    new AreaProcessor(c, dType)
 }
 
 /*
@@ -201,13 +206,12 @@ class AnchorProcessor(c: Crawler, dType: DiscriminatorType)
   }
 }
 
-class ImageInputProcessor(c: Crawler, dType: DiscriminatorType) 
+class ImageProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: name => { 
-        parentElement.asInstanceOf[HtmlForm].
-                      getInputByName[HtmlImageInput](dt.name) 
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlImage](dt.xPath) 
       }
     }
   }
@@ -228,6 +232,16 @@ class DivProcessor(c: Crawler, dType: DiscriminatorType)
   }
 }
 
+class AreaProcessor(c: Crawler, dType: DiscriminatorType) 
+ extends ElementProcessor(c, dType) {
+  def resolveNode(parentElement: DomNode): DomNode = {
+    discriminatorType match {
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlArea](dt.xPath) 
+      }
+    }
+  }
+}
 /**
  * The main Crawler class, which servers as the base class for individual
  * crawls.  This class is itself an element processor as it serves as the
