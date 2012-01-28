@@ -209,6 +209,7 @@ class AnchorProcessor(c: Crawler, dType: DiscriminatorType)
 class ImageProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
+    println("RESOLVE NODE: parent is " + parentElement)
     discriminatorType match {
       case dt: xPath => { 
         parentElement.getFirstByXPath[HtmlImage](dt.xPath) 
@@ -381,5 +382,19 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
 
   def from(processor: ElementProcessor): DomNode = {
     processor.resolveNode(nodeStack(0))
+  }
+
+  def printPage = {
+    import javax.xml.transform.{TransformerFactory,OutputKeys}
+    import javax.xml.transform.dom.DOMSource
+    import javax.xml.transform.stream.StreamResult
+    import java.io.StringWriter
+    val transformer = TransformerFactory.newInstance().newTransformer()
+    transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+    //initialize StreamResult with File object to save to file
+    val result = new StreamResult(new StringWriter())
+    val source = new DOMSource(nodeStack(0).asInstanceOf[HtmlPage])
+    transformer.transform(source, result)
+    println("===\n%s\n===".format(result.getWriter().toString()))
   }
 }
