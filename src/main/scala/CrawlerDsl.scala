@@ -54,6 +54,11 @@ object area {
     new AreaProcessor(c, dType)
 }
 
+object paragraph {
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+    new ParagraphProcessor(c, dType)
+}
+
 /*
  * The following family of case classes all descend from DiscriminatorType,
  * and provide the ElementProcessor classes with the information they need
@@ -239,6 +244,17 @@ class AreaProcessor(c: Crawler, dType: DiscriminatorType)
     discriminatorType match {
       case dt: xPath => { 
         parentElement.getFirstByXPath[HtmlArea](dt.xPath) 
+      }
+    }
+  }
+}
+
+class ParagraphProcessor(c: Crawler, dType: DiscriminatorType) 
+ extends ElementProcessor(c, dType) {
+  def resolveNode(parentElement: DomNode): DomNode = {
+    discriminatorType match {
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlParagraph](dt.xPath) 
       }
     }
   }
