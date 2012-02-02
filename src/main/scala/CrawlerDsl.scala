@@ -59,6 +59,11 @@ object paragraph {
     new ParagraphProcessor(c, dType)
 }
 
+object span {
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+    new SpanProcessor(c, dType)
+}
+
 /*
  * The following family of case classes all descend from DiscriminatorType,
  * and provide the ElementProcessor classes with the information they need
@@ -255,6 +260,17 @@ class ParagraphProcessor(c: Crawler, dType: DiscriminatorType)
     discriminatorType match {
       case dt: xPath => { 
         parentElement.getFirstByXPath[HtmlParagraph](dt.xPath) 
+      }
+    }
+  }
+}
+
+class SpanProcessor(c: Crawler, dType: DiscriminatorType) 
+ extends ElementProcessor(c, dType) {
+  def resolveNode(parentElement: DomNode): DomNode = {
+    discriminatorType match {
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlSpan](dt.xPath) 
       }
     }
   }
