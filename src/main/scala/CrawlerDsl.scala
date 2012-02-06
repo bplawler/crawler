@@ -335,7 +335,7 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * access to it.
   */
   protected def push(d: DomNode) = { 
-    println("Pushing: %s".format(d))
+    //println("Pushing: %s".format(d))
     nodeStack = d +: nodeStack 
   }
 
@@ -405,7 +405,11 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
 
   def in(processor: ElementProcessor) = {
     println("in: %s dt is %s".format(processor, processor.discriminatorType))
-    processBlock(processor) _
+    try {
+      processBlock(processor) _
+    } catch {
+      case e: Throwable => printPage; throw e
+    }
   }
 
   def forAll(processor: ElementProcessor) = {
