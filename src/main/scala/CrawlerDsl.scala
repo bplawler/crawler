@@ -64,6 +64,11 @@ object span {
     new SpanProcessor(c, dType)
 }
 
+object script {
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+    new ScriptProcessor(c, dType)
+}
+
 /*
  * The following family of case classes all descend from DiscriminatorType,
  * and provide the ElementProcessor classes with the information they need
@@ -275,6 +280,18 @@ class SpanProcessor(c: Crawler, dType: DiscriminatorType)
     }
   }
 }
+
+class ScriptProcessor(c: Crawler, dType: DiscriminatorType) 
+ extends ElementProcessor(c, dType) {
+  def resolveNode(parentElement: DomNode): DomNode = {
+    discriminatorType match {
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlScript](dt.xPath) 
+      }
+    }
+  }
+}
+
 /**
  * The main Crawler class, which servers as the base class for individual
  * crawls.  This class is itself an element processor as it serves as the
