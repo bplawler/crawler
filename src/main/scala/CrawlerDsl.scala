@@ -24,9 +24,9 @@ object form {
     new FormProcessor(c, dType)
 }
 
-object textField {
+object input {
   def having(dType: DiscriminatorType)(implicit c: Crawler) =
-    new TextFieldProcessor(c, dType)
+    new InputProcessor(c, dType)
 }
 
 object image {
@@ -42,11 +42,6 @@ object anchor {
 object div {
   def having(dType: DiscriminatorType)(implicit c: Crawler) = 
     new DivProcessor(c, dType)
-}
-
-object submit {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
-    new SubmitProcessor(c, dType)
 }
 
 object area {
@@ -169,33 +164,20 @@ class FormProcessor(c: Crawler, dType: DiscriminatorType)
   }
 }
 
-class TextFieldProcessor(c: Crawler, dType: DiscriminatorType) 
+class InputProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
       case dt: name => { 
         parentElement.asInstanceOf[HtmlForm].
-                      getInputByName[HtmlTextInput](dt.name) 
+                      getInputByName[HtmlInput](dt.name) 
       }
       case dt: id => { 
         parentElement.asInstanceOf[HtmlElement].
-                      getElementById[HtmlTextInput](dt.id) 
+                      getElementById[HtmlInput](dt.id) 
       }
-    }
-  }
-}
-
-class SubmitProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
-  def resolveNode(parentElement: DomNode): DomNode = {
-    discriminatorType match {
-      case dt: name => { 
-        parentElement.asInstanceOf[HtmlForm].
-                      getInputByName[HtmlSubmitInput](dt.name) 
-      }
-      case dt: id => { 
-        parentElement.asInstanceOf[HtmlElement].
-                      getElementById[HtmlSubmitInput](dt.id) 
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlInput](dt.xPath) 
       }
     }
   }
