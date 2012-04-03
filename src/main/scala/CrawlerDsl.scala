@@ -420,6 +420,10 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   }
 
   def printPage = {
+    println(printElement(nodeStack(0).asInstanceOf[HtmlPage]))
+  }
+
+  def printElement(node: org.w3c.dom.Node) : String = {
     import javax.xml.transform.{TransformerFactory,OutputKeys}
     import javax.xml.transform.dom.DOMSource
     import javax.xml.transform.stream.StreamResult
@@ -428,8 +432,8 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
     transformer.setOutputProperty(OutputKeys.INDENT, "yes")
     //initialize StreamResult with File object to save to file
     val result = new StreamResult(new StringWriter())
-    val source = new DOMSource(nodeStack(0).asInstanceOf[HtmlPage])
+    val source = new DOMSource(node)
     transformer.transform(source, result)
-    println("===\n%s\n===".format(result.getWriter().toString()))
+    result.getWriter().toString()
   }
 }
