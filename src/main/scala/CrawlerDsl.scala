@@ -280,7 +280,7 @@ class ScriptProcessor(c: Crawler, dType: DiscriminatorType)
  * starting point for navigation, and it also provides most of the tokens
  * that are part of the crawler DSL.
  */
-class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
+abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
               failOnJSError: Boolean = false) extends ElementProcessor
 {
  /**
@@ -390,6 +390,8 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * crawler implementation to validate and make use of the configuration.
   */
   def configure(m: java.util.Map[String, String]) = { config = m }
+
+  def crawl
 
   def navigateTo(url: String) = {
     currentUrl = url
