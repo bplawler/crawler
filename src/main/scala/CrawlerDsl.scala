@@ -295,6 +295,8 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * HtmlUnit class that actually does all the work.
   */
   private val client = new WebClient(BrowserVersion.FIREFOX_3_6)
+
+  protected var config: java.util.Map[String, String] = null;
  
  /**
   * List of DomNode instances that functions as a stack.  As the 
@@ -380,6 +382,14 @@ class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * be this new node.
   */
   protected def pushToEnd(node: DomNode) = { nodeStack = nodeStack :+ node }
+
+ /**
+  * For some crawls, additional configuration parameters will be passed 
+  * in post-instantiation.  This method is on the base Crawler class so that
+  * it may be called generically on any child class.  It is up to the 
+  * crawler implementation to validate and make use of the configuration.
+  */
+  def configure(m: java.util.Map[String, String]) = { config = m }
 
   def navigateTo(url: String) = {
     currentUrl = url
