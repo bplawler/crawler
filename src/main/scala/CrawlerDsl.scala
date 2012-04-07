@@ -150,6 +150,7 @@ class PageProcessor(page: HtmlPage, c: Crawler, dType: DiscriminatorType = null)
  extends ElementProcessor(c, dType) {
   mainElement = page
   def resolveNode(parent: DomNode): DomNode = mainElement
+  def url = page.getUrl.toString
 }
 
 class FormProcessor(c: Crawler, dType: DiscriminatorType) 
@@ -274,6 +275,12 @@ class ScriptProcessor(c: Crawler, dType: DiscriminatorType)
   }
 }
 
+trait CrawlObserver {
+  def configure(m: java.util.Map[String, String])
+  def click: crawler.PageProcessor
+  def doCrawl: Unit
+}
+
 /**
  * The main Crawler class, which servers as the base class for individual
  * crawls.  This class is itself an element processor as it serves as the
@@ -281,7 +288,7 @@ class ScriptProcessor(c: Crawler, dType: DiscriminatorType)
  * that are part of the crawler DSL.
  */
 abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
-              failOnJSError: Boolean = false) extends ElementProcessor
+              failOnJSError: Boolean = false) extends ElementProcessor with CrawlObserver
 {
  /**
   * Set up the current Crawler as an implicit value that will be 
@@ -383,15 +390,17 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   */
   protected def pushToEnd(node: DomNode) = { nodeStack = nodeStack :+ node }
 
+  def crawl
+
+  override def doCrawl = crawl
+
  /**
   * For some crawls, additional configuration parameters will be passed 
   * in post-instantiation.  This method is on the base Crawler class so that
   * it may be called generically on any child class.  It is up to the 
   * crawler implementation to validate and make use of the configuration.
   */
-  def configure(m: java.util.Map[String, String]) = { config = m }
-
-  def crawl
+  override def configure(m: java.util.Map[String, String]) = { config = m }
 
   def navigateTo(url: String) = {
     currentUrl = url
@@ -407,7 +416,7 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
     nodeStack(0).asInstanceOf[HtmlInput].setValueAttribute(s)
   }
 
-  def click = {
+  override def click = {
     val stackItem = nodeStack(0)
     val element = stackItem.asInstanceOf[HtmlElement]
     val clickResult = element.click[HtmlPage]()
