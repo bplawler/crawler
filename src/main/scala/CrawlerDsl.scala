@@ -303,7 +303,7 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   */
   private val client = new WebClient(BrowserVersion.FIREFOX_3_6)
 
-  protected var config: java.util.Map[String, String] = null;
+  protected var config = collection.mutable.Map[String, Any]();
  
  /**
   * List of DomNode instances that functions as a stack.  As the 
@@ -400,7 +400,7 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * it may be called generically on any child class.  It is up to the 
   * crawler implementation to validate and make use of the configuration.
   */
-  override def configure(m: java.util.Map[String, String]) = { config = m }
+  override def configure(m: java.util.Map[String, String]) = { config ++= m }
 
   def navigateTo(url: String) = {
     currentUrl = url
