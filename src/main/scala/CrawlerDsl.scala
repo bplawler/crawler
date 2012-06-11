@@ -64,6 +64,11 @@ object script {
     new ScriptProcessor(c, dType)
 }
 
+object tableDataCell {
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+    new TableDataCellProcessor(c, dType)
+}
+
 /*
  * The following family of case classes all descend from DiscriminatorType,
  * and provide the ElementProcessor classes with the information they need
@@ -270,6 +275,17 @@ class ScriptProcessor(c: Crawler, dType: DiscriminatorType)
     discriminatorType match {
       case dt: xPath => { 
         parentElement.getFirstByXPath[HtmlScript](dt.xPath) 
+      }
+    }
+  }
+}
+
+class TableDataCellProcessor(c: Crawler, dType: DiscriminatorType) 
+ extends ElementProcessor(c, dType) {
+  def resolveNode(parentElement: DomNode): DomNode = {
+    discriminatorType match {
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlTableDataCell](dt.xPath) 
       }
     }
   }
