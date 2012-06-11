@@ -360,12 +360,17 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * by that ElementProcessor.
   */
   private def processBlock(processor: ElementProcessor)(block: => Unit) = { 
-    nodeStack.length match {
-      case 0 => push(processor.resolveNode(null))
-      case _ => push(processor.resolveNode(nodeStack(0)))
+    // attempt to resolve the node,
+    (
+      nodeStack.length match {
+        case 0 => processor.resolveNode(null)
+        case _ => processor.resolveNode(nodeStack(0))
+      }
+    // then process the block.  If no node is resolved, skip the block.
+    ) match {
+      case null =>
+      case n: DomNode => push(n); block; pop
     }
-    block 
-    pop
   }
 
  /** 
