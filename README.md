@@ -128,3 +128,8 @@ which all of the items in the list will be run.
 
 This invocation of `forAll` will loop through each individual search result
 and print out the main anchor text for each.
+
+## Releases
+
+* 0.3.3 (2012.06.15)
+  * Added support for `mouseOver` in the DSL.  Works just like `click`.

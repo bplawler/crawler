@@ -151,9 +151,9 @@ abstract class ElementProcessor(
 /*
  * Here are all of the ElementProcessor implementations.
  */
-class PageProcessor(page: HtmlPage, c: Crawler, dType: DiscriminatorType = null)
+class PageProcessor(page: Page, c: Crawler, dType: DiscriminatorType = null)
  extends ElementProcessor(c, dType) {
-  mainElement = page
+  mainElement = page.asInstanceOf[DomNode]
   def resolveNode(parent: DomNode): DomNode = mainElement
   def url = page.getUrl.toString
 }
@@ -441,6 +441,13 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
     val stackItem = nodeStack(0)
     val element = stackItem.asInstanceOf[HtmlElement]
     val clickResult = element.click[HtmlPage]()
+    new PageProcessor(clickResult, this)
+  }
+
+  def mouseOver = {
+    val stackItem = nodeStack(0)
+    val element = stackItem.asInstanceOf[HtmlElement]
+    val clickResult = element.mouseOver()
     new PageProcessor(clickResult, this)
   }
 
