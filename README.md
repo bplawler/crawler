@@ -131,5 +131,11 @@ and print out the main anchor text for each.
 
 ## Releases
 
+* 0.5.0 (2012.06.24)
+  * Bumping the version number to something that is completely unrelated 
+    to circupon.
+  * During crawler construction, it is now possible to set whether 
+    css is supported (default is false) and whether JavaScript is supported
+    (default is true).
 * 0.3.3 (2012.06.15)
   * Added support for `mouseOver` in the DSL.  Works just like `click`.

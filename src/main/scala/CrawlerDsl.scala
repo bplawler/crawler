@@ -303,8 +303,12 @@ trait CrawlObserver {
  * starting point for navigation, and it also provides most of the tokens
  * that are part of the crawler DSL.
  */
-abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
-              failOnJSError: Boolean = false) extends ElementProcessor with CrawlObserver
+abstract class Crawler(
+  version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
+  failOnJSError: Boolean = false,
+  javaScriptEnabled: Boolean = true,
+  cssEnabled: Boolean = false
+) extends ElementProcessor with CrawlObserver
 {
  /**
   * Set up the current Crawler as an implicit value that will be 
@@ -317,7 +321,13 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
  /**
   * HtmlUnit class that actually does all the work.
   */
-  private val client = new WebClient(BrowserVersion.FIREFOX_3_6)
+  //private val client = new WebClient(version, "216.155.139.115", 3128)
+  private val client = new WebClient(version)
+
+  // Set the various switches to affect the behavior of this client.
+  client.setThrowExceptionOnScriptError(failOnJSError)
+  client.setJavaScriptEnabled(javaScriptEnabled)
+  client.setCssEnabled(cssEnabled)
 
   protected var config = collection.mutable.Map[String, Any]();
  
@@ -337,12 +347,6 @@ abstract class Crawler(version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   * user is trying to visit.
   */
   private var currentUrl: String = ""
-
- /**
-  * Specifies whether this crawler needs to be concerned about 
-  * JavaScript errors.
-  */
-  client.setThrowExceptionOnScriptError(failOnJSError)
 
  /**
   * Simple implemention of resolveNode, which will simply attempt
