@@ -1,6 +1,6 @@
 name := "crawler"
 
-version := "0.3.3"
+version := "0.5.0"
 
 scalaVersion := "2.8.1"
 
