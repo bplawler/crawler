@@ -212,7 +212,6 @@ class AnchorProcessor(c: Crawler, dType: DiscriminatorType)
 class ImageProcessor(c: Crawler, dType: DiscriminatorType) 
  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
-    println("RESOLVE NODE: parent is " + parentElement)
     discriminatorType match {
       case dt: xPath => { 
         parentElement.getFirstByXPath[HtmlImage](dt.xPath) 
@@ -363,7 +362,6 @@ abstract class Crawler(
   * access to it.
   */
   protected def push(d: DomNode) = { 
-    //println("Pushing: %s".format(d))
     nodeStack = d +: nodeStack 
   }
 
@@ -456,7 +454,6 @@ abstract class Crawler(
   }
 
   def in(processor: ElementProcessor) = {
-    println("in: %s dt is %s".format(processor, processor.discriminatorType))
     try {
       processBlock(processor) _
     } catch {
