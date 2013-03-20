@@ -306,7 +306,8 @@ abstract class Crawler(
   version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
   failOnJSError: Boolean = false,
   javaScriptEnabled: Boolean = true,
-  cssEnabled: Boolean = false
+  cssEnabled: Boolean = false,
+  useInsecureSSL: Boolean = true
 ) extends ElementProcessor with CrawlObserver
 {
  /**
@@ -327,6 +328,7 @@ abstract class Crawler(
   client.setThrowExceptionOnScriptError(failOnJSError)
   client.setJavaScriptEnabled(javaScriptEnabled)
   client.setCssEnabled(cssEnabled)
+  client.setUseInsecureSSL(useInsecureSSL)
 
   protected var config = collection.mutable.Map[String, Any]();
  
