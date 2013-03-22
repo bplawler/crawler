@@ -417,7 +417,10 @@ abstract class Crawler(
 
   def crawl
 
-  override def doCrawl = crawl
+  override def doCrawl = {
+    crawl
+    client.closeAllWindows
+  }
 
  /**
   * For some crawls, additional configuration parameters will be passed 
@@ -445,6 +448,10 @@ abstract class Crawler(
     val stackItem = nodeStack(0)
     val element = stackItem.asInstanceOf[HtmlElement]
     val clickResult = element.click[HtmlPage]()
+    val start = (new java.util.Date).getTime
+    val stillRunning = client.waitForBackgroundJavaScript(1000 /* ms */)
+    println("waited %d ms for background JS, %d still running..."
+      .format((new java.util.Date getTime) - start, stillRunning))
     new PageProcessor(clickResult, this)
   }
 
