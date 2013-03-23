@@ -327,8 +327,11 @@ abstract class Crawler(
   // Set the various switches to affect the behavior of this client.
   client.setThrowExceptionOnScriptError(failOnJSError)
   client.setJavaScriptEnabled(javaScriptEnabled)
-  client.setCssEnabled(cssEnabled)
   client.setUseInsecureSSL(useInsecureSSL)
+  client.setCssEnabled(cssEnabled)
+  if(!cssEnabled) {
+    client.setCssErrorHandler(new SilentCssErrorHandler())
+  }
 
   protected var config = collection.mutable.Map[String, Any]();
  
