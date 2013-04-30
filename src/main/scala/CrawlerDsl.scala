@@ -366,7 +366,7 @@ abstract class Crawler(
   * onto the stack so that the next processing block will have
   * access to it.
   */
-  protected def push(d: DomNode) = { 
+  protected[crawler] def push(d: DomNode) = { 
     nodeStack = d +: nodeStack 
   }
 
@@ -375,7 +375,7 @@ abstract class Crawler(
   * block for a node concludes, and we want to restore the previous
   * node to the top of the stack.
   */
-  protected def pop = { nodeStack = nodeStack drop 1 }
+  protected[crawler] def pop = { nodeStack = nodeStack drop 1 }
 
  /**
   * Receives an ElementProcessor instance and the 
@@ -416,7 +416,7 @@ abstract class Crawler(
   * when the stack has been emptied, there at the very bottom will 
   * be this new node.
   */
-  protected def pushToEnd(node: DomNode) = { nodeStack = nodeStack :+ node }
+  protected[crawler] def pushToEnd(node: DomNode) = { nodeStack = nodeStack :+ node }
 
   def crawl
 

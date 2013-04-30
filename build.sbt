@@ -1,10 +1,10 @@
 name := "crawler"
 
-version := "0.5.3"
+version := "0.5.4"
 
-scalaVersion := "2.8.1"
+scalaVersion := "2.9.1"
 
 libraryDependencies ++= Seq (
     "net.sourceforge.htmlunit" % "htmlunit" % "2.9"
-  , "org.scala-tools.testing" %% "specs" % "1.6.6" % "test"
+  , "org.specs2" %% "specs2" % "1.12.4" % "test"
 )
