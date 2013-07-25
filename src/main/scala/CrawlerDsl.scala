@@ -454,7 +454,7 @@ abstract class Crawler(
     val start = (new java.util.Date).getTime
     val stillRunning = client.waitForBackgroundJavaScript(1000 /* ms */)
     println("waited %d ms for background JS, %d still running..."
-      .format((new java.util.Date getTime) - start, stillRunning))
+      .format((new java.util.Date).getTime - start, stillRunning))
     new PageProcessor(clickResult, this)
   }
 
