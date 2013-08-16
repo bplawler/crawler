@@ -3,6 +3,7 @@ package crawler
 import com.gargoylesoftware.htmlunit._
 import com.gargoylesoftware.htmlunit.html._
 import scala.collection.JavaConversions._
+import org.apache.http.HttpEntity
 
 /*
  * The following family of objects represent the HTML element types that this
@@ -144,7 +145,7 @@ abstract class ElementProcessor(
   def ==> (block: => Unit) = {
     crawler.push(this.mainElement)
     block
-    crawler.pop
+    crawler.pop()
   }
 }
 
@@ -203,7 +204,9 @@ class AnchorProcessor(c: Crawler, dType: DiscriminatorType)
         parentElement.asInstanceOf[HtmlPage].getElementById(dt.id) 
       }
       case dt: title => {
-        parentElement.getFirstByXPath[HtmlAnchor]("""//a[@title="%s"]""".format(dt.title))
+        parentElement.getFirstByXPath[HtmlAnchor](
+          """//a[@title="%s"]""".format(dt.title)
+        )
       }
     }
   }
@@ -293,7 +296,7 @@ class TableDataCellProcessor(c: Crawler, dType: DiscriminatorType)
 trait CrawlObserver {
   def configure(m: java.util.Map[String, String])
   def click: crawler.PageProcessor
-  def doCrawl: Unit
+  def doCrawl()
 }
 
 /**
@@ -321,15 +324,14 @@ abstract class Crawler(
  /**
   * HtmlUnit class that actually does all the work.
   */
-  //private val client = new WebClient(version, "216.155.139.115", 3128)
-  private val client = new WebClient(version)
+  private[this] val client = new WebClient(version)
 
   // Set the various switches to affect the behavior of this client.
   client.setThrowExceptionOnScriptError(failOnJSError)
   client.setJavaScriptEnabled(javaScriptEnabled)
   client.setUseInsecureSSL(useInsecureSSL)
   client.setCssEnabled(cssEnabled)
-  if(!cssEnabled) {
+  if (! cssEnabled) {
     client.setCssErrorHandler(new SilentCssErrorHandler())
   }
 
@@ -375,24 +377,24 @@ abstract class Crawler(
   * block for a node concludes, and we want to restore the previous
   * node to the top of the stack.
   */
-  protected[crawler] def pop = { nodeStack = nodeStack drop 1 }
+  protected[crawler] def pop() = { nodeStack = nodeStack drop 1 }
 
  /**
   * Receives an ElementProcessor instance and the 
   * block of code that is to be executed against the node that is resolved
   * by that ElementProcessor.
   */
-  private def processBlock(processor: ElementProcessor)(block: => Unit) = { 
+  private def processBlock(processor: ElementProcessor)(block: => Unit) = {
     // attempt to resolve the node,
     (
       nodeStack.length match {
         case 0 => processor.resolveNode(null)
-        case _ => processor.resolveNode(nodeStack(0))
+        case _ => processor.resolveNode(nodeStack.head)
       }
     // then process the block.  If no node is resolved, skip the block.
     ) match {
       case null =>
-      case n: DomNode => push(n); block; pop
+      case n: DomNode => push(n); block; pop()
     }
   }
 
@@ -403,7 +405,7 @@ abstract class Crawler(
   * and call the block of code that was passed in on each.
   */
   private def processList(processor: ElementProcessor)(block: => Unit) = { 
-    for(element <- processor.resolveList(nodeStack(0))) {
+    for(element <- processor.resolveList(nodeStack.head)) {
       push(element.asInstanceOf[DomNode])
       block 
       pop
@@ -416,13 +418,13 @@ abstract class Crawler(
   * when the stack has been emptied, there at the very bottom will 
   * be this new node.
   */
-  protected[crawler] def pushToEnd(node: DomNode) = { nodeStack = nodeStack :+ node }
+  protected[crawler] def pushToEnd(node: DomNode) = { nodeStack :+= node }
 
-  def crawl
+  def crawl()
 
-  override def doCrawl = {
-    crawl
-    client.closeAllWindows
+  override def doCrawl() {
+    crawl()
+    client.closeAllWindows()
   }
 
  /**
@@ -444,11 +446,11 @@ abstract class Crawler(
   }
 
   def typeIn(s: String) = {
-    nodeStack(0).asInstanceOf[HtmlInput].setValueAttribute(s)
+    nodeStack.head.asInstanceOf[HtmlInput].setValueAttribute(s)
   }
 
   override def click = {
-    val stackItem = nodeStack(0)
+    val stackItem = nodeStack.head
     val element = stackItem.asInstanceOf[HtmlElement]
     val clickResult = element.click[HtmlPage]()
     val start = (new java.util.Date).getTime
@@ -459,7 +461,7 @@ abstract class Crawler(
   }
 
   def mouseOver = {
-    val stackItem = nodeStack(0)
+    val stackItem = nodeStack.head
     val element = stackItem.asInstanceOf[HtmlElement]
     val clickResult = element.mouseOver()
     new PageProcessor(clickResult, this)
@@ -469,7 +471,7 @@ abstract class Crawler(
     try {
       processBlock(processor) _
     } catch {
-      case e: Throwable => printPage; throw e
+      case e: Throwable => println(page.asString); throw e
     }
   }
 
@@ -478,24 +480,27 @@ abstract class Crawler(
   }
 
   def from(processor: ElementProcessor): DomNode = {
-    processor.resolveNode(nodeStack(0))
+    processor.resolveNode(nodeStack.head)
   }
 
-  def printPage = {
-    println(printElement(nodeStack(0).asInstanceOf[HtmlPage]))
+  def page = nodeStack.head.asInstanceOf[HtmlPage]
+
+  /**
+   * Downloads given url via GET and returns response entity.
+   *
+   * Import `crawler._` and use `download(url).getBytes` to get
+   * actual content bytes.
+   */
+  def download(url: String): HttpEntity = {
+    val cookies = client.getCookieManager.getCookies.map(_.toHttpClient).toSet
+    Downloader.download(url, cookies)
   }
 
-  def printElement(node: org.w3c.dom.Node) : String = {
-    import javax.xml.transform.{TransformerFactory,OutputKeys}
-    import javax.xml.transform.dom.DOMSource
-    import javax.xml.transform.stream.StreamResult
-    import java.io.StringWriter
-    val transformer = TransformerFactory.newInstance().newTransformer()
-    transformer.setOutputProperty(OutputKeys.INDENT, "yes")
-    //initialize StreamResult with File object to save to file
-    val result = new StreamResult(new StringWriter())
-    val source = new DOMSource(node)
-    transformer.transform(source, result)
-    result.getWriter().toString()
-  }
+  @deprecated("Please use `println(page.asString)` instead.", "0.6.0")
+  def printPage() { println(page.asString) }
+
+  @deprecated(
+    "Instead of `printElement(node)` please use `node.asString`.", "0.6.0"
+  )
+  def printElement(node: org.w3c.dom.Node): String = node.asString
 }
