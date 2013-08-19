@@ -4,7 +4,9 @@ The purpose of this project is to provide a nice DSL wrapper around the
 cumbersome htmlunit Java library.  Here is an example taken from a unit 
 test in this package:
 
-    class testCrawler extends crawler {
+    import crawler._
+
+    class TestCrawler(output: java.io.OutputStream) extends Crawler {
       var result = ""
       def crawl = {
         navigateTo("http://www.google.com") {
@@ -19,15 +21,25 @@ test in this package:
         }
         onCurrentPage {
           result = from(div having id("resultStats")) getTextContent
+          val url = from(
+            anchor having xPath("//div[@id='field_timetable_file-wrapper']/a")
+          ).getAttributes.getNamedItem("href").getTextContent
+          download(url).writeTo(output)
         }
       }
     }
 
-This `testCrawler` class defines a crawl that will navigate to google, 
+This `TestCrawler` class defines a crawl that will navigate to google, 
 find the form whose id is `tsf`, type something into the form, then
 click on the submit button named `btnK`, which will then take us to a 
 new page (the search results) where we can then grab the content of the
 `resultStats` div.
+
+It also grabs URL from a link defined by XPath and downloads it to given
+OutputStream.
+
+Alternatively you could just get bytes instead of writing downloaded data to 
+OutputStream: `download(url).getBytes`.
 
 ## Background
 
@@ -131,6 +143,9 @@ and print out the main anchor text for each.
 
 ## Releases
 
+* 0.6.0 (2013.08.16)
+  * Switched to Scala 2.10.2 for building (with 2.10 binary compatibility).
+  * Added #download method.
 * 0.5.0 (2012.06.24)
   * Bumping the version number to something that is completely unrelated 
     to circupon.
