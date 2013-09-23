@@ -359,7 +359,7 @@ abstract class Crawler(
   * to go to the page requested by the user.
   */
   def resolveNode(parentElement: DomNode) = {
-    client.getPage[HtmlPage](currentUrl)
+    client.getPage[SgmlPage](currentUrl)
   }
 
  /**
@@ -483,7 +483,7 @@ abstract class Crawler(
     processor.resolveNode(nodeStack.head)
   }
 
-  def page = nodeStack.head.asInstanceOf[HtmlPage]
+  def page = nodeStack.head.asInstanceOf[SgmlPage]
 
   /**
    * Downloads given url via GET and returns response entity.
