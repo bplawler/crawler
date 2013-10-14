@@ -180,8 +180,10 @@ class InputProcessor(c: Crawler, dType: DiscriminatorType)
                       getInputByName[HtmlInput](dt.name) 
       }
       case dt: id => { 
-        parentElement.asInstanceOf[HtmlElement].
-                      getElementById[HtmlInput](dt.id) 
+        parentElement.asInstanceOf[HtmlElement]
+                     .getPage
+                     .asInstanceOf[HtmlPage]
+                     .getElementById[HtmlInput](dt.id, false) 
       }
       case dt: xPath => { 
         parentElement.getFirstByXPath[HtmlInput](dt.xPath) 
@@ -306,7 +308,7 @@ trait CrawlObserver {
  * that are part of the crawler DSL.
  */
 abstract class Crawler(
-  version: BrowserVersion = BrowserVersion.FIREFOX_3_6,
+  version: BrowserVersion = BrowserVersion.FIREFOX_17,
   failOnJSError: Boolean = false,
   javaScriptEnabled: Boolean = true,
   cssEnabled: Boolean = false,
@@ -327,10 +329,10 @@ abstract class Crawler(
   private[this] val client = new WebClient(version)
 
   // Set the various switches to affect the behavior of this client.
-  client.setThrowExceptionOnScriptError(failOnJSError)
-  client.setJavaScriptEnabled(javaScriptEnabled)
-  client.setUseInsecureSSL(useInsecureSSL)
-  client.setCssEnabled(cssEnabled)
+  client.getOptions.setThrowExceptionOnScriptError(failOnJSError)
+  client.getOptions.setJavaScriptEnabled(javaScriptEnabled)
+  client.getOptions.setUseInsecureSSL(useInsecureSSL)
+  client.getOptions.setCssEnabled(cssEnabled)
   if (! cssEnabled) {
     client.setCssErrorHandler(new SilentCssErrorHandler())
   }

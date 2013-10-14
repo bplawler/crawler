@@ -1,7 +1,8 @@
 package crawler
 
 import org.apache.http.HttpEntity
-import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.impl.client.BasicCookieStore
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.cookie.Cookie
 
@@ -20,10 +21,13 @@ object Downloader {
    * actual content bytes.
    */
   def download(url: String, cookies: Set[Cookie]=Set.empty): HttpEntity = {
-    val http = new DefaultHttpClient()
-
-    val cookieStore = http.getCookieStore
+    val cookieStore = new BasicCookieStore
     cookies.foreach(cookieStore.addCookie)
+
+    val http = HttpClientBuilder
+                 .create
+                 .setDefaultCookieStore(cookieStore)
+                 .build
 
     val response = http.execute(new HttpGet(url))
     response.getEntity
