@@ -2,8 +2,11 @@ package crawler
 
 import com.gargoylesoftware.htmlunit._
 import com.gargoylesoftware.htmlunit.html._
-import scala.collection.JavaConversions._
 import org.apache.http.HttpEntity
+import scala.collection.JavaConversions._
+import scala.concurrent._
+import scala.concurrent.duration._
+import ExecutionContext.Implicits.global
 
 /*
  * The following family of objects represent the HTML element types that this
@@ -454,7 +457,10 @@ abstract class Crawler(
   override def click = {
     val stackItem = nodeStack.head
     val element = stackItem.asInstanceOf[HtmlElement]
-    val clickResult = element.click[HtmlPage]()
+    val clickResult = Await.result(
+                        Future { element.click[HtmlPage]() }
+                      , 60.second
+                      )
     val start = (new java.util.Date).getTime
     val stillRunning = client.waitForBackgroundJavaScript(1000 /* ms */)
     println("waited %d ms for background JS, %d still running..."
