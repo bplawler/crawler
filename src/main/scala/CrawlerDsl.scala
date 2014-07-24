@@ -39,37 +39,37 @@ object image {
 }
 
 object anchor {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new AnchorProcessor(c, dType)
 }
 
 object div {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new DivProcessor(c, dType)
 }
 
 object area {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new AreaProcessor(c, dType)
 }
 
 object paragraph {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new ParagraphProcessor(c, dType)
 }
 
 object span {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new SpanProcessor(c, dType)
 }
 
 object script {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new ScriptProcessor(c, dType)
 }
 
 object tableDataCell {
-  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+  def having(dType: DiscriminatorType)(implicit c: Crawler) =
     new TableDataCellProcessor(c, dType)
 }
 
@@ -82,10 +82,15 @@ object tableDataCell {
  * resolve the node.
  */
 abstract class DiscriminatorType
+
 case class id(id: String) extends DiscriminatorType
+
 case class name(name: String) extends DiscriminatorType
+
 case class title(title: String) extends DiscriminatorType
+
 case class xPath(xPath: String) extends DiscriminatorType
+
 case class text(text: String) extends DiscriminatorType
 
 /**
@@ -96,56 +101,55 @@ case class text(text: String) extends DiscriminatorType
  * certain HTML node in the DOM tree.
  */
 abstract class ElementProcessor(
-         val crawler: Crawler = null, 
-         val discriminatorType: DiscriminatorType = null) 
-{
- /**
-  * This variable contains the node that this element processor resolved to.
-  */
+                                 val crawler: Crawler = null,
+                                 val discriminatorType: DiscriminatorType = null) {
+  /**
+   * This variable contains the node that this element processor resolved to.
+   */
   protected var mainElement: DomNode = null
 
- /**
-  * Contract for the method that is used to resolve the node for this element
-  * processor.  Note that a parent node is passed in.  Frequently in htmlunit
-  * DOM processing is done relative to a parent.  This DSL represents that
-  * by allowing embedded code blocks which represent operations to be done
-  * within the scope of the ElementProcessor directly preceeding the code 
-  * block.
-  */
+  /**
+   * Contract for the method that is used to resolve the node for this element
+   * processor.  Note that a parent node is passed in.  Frequently in htmlunit
+   * DOM processing is done relative to a parent.  This DSL represents that
+   * by allowing embedded code blocks which represent operations to be done
+   * within the scope of the ElementProcessor directly preceeding the code
+   * block.
+   */
   def resolveNode(parent: DomNode): DomNode
 
- /**
-  * List resolution is a special case that occurs with the "forAll"
-  * functionality in the DSL.  Conveniently, the underlying htmlunit call
-  * that retrieves lists by xpath is high up in the hierarchy, at the
-  * DomNode level, so we can just make list resolution a general thing - 
-  * we don't need to put it in the individual ElementProcessor subclasses.
-  */
+  /**
+   * List resolution is a special case that occurs with the "forAll"
+   * functionality in the DSL.  Conveniently, the underlying htmlunit call
+   * that retrieves lists by xpath is high up in the hierarchy, at the
+   * DomNode level, so we can just make list resolution a general thing -
+   * we don't need to put it in the individual ElementProcessor subclasses.
+   */
   def resolveList(parentNode: DomNode): Seq[_] = {
     discriminatorType match {
-      case dt: xPath => { 
+      case dt: xPath => {
         parentNode.getByXPath(dt.xPath)
       }
     }
   }
 
- /**
-  * "push" operator, which has the effect of pushing the main element of 
-  * the current processor onto the BOTTOM OF the node stack, so that when
-  * we unravel the nested processing of the DSL, the item left at the top
-  * of the stack will be the object that was pushed onto the bottom with
-  * this operator.
-  */
-  def ==> = { 
-    crawler.pushToEnd(this.mainElement) 
+  /**
+   * "push" operator, which has the effect of pushing the main element of
+   * the current processor onto the BOTTOM OF the node stack, so that when
+   * we unravel the nested processing of the DSL, the item left at the top
+   * of the stack will be the object that was pushed onto the bottom with
+   * this operator.
+   */
+  def ==>() = {
+    crawler.pushToEnd(this.mainElement)
   }
 
- /**
-  * "push" operator, which rather than pushing the main element onto the stack
-  * will instead push the main element to a code block (typically a function
-  * call).
-  */
-  def ==> (block: => Unit) = {
+  /**
+   * "push" operator, which rather than pushing the main element onto the stack
+   * will instead push the main element to a code block (typically a function
+   * call).
+   */
+  def ==>(block: => Unit) = {
     crawler.push(this.mainElement)
     block
     crawler.pop()
@@ -156,151 +160,142 @@ abstract class ElementProcessor(
  * Here are all of the ElementProcessor implementations.
  */
 class PageProcessor(page: Page, c: Crawler, dType: DiscriminatorType = null)
- extends ElementProcessor(c, dType) {
+  extends ElementProcessor(c, dType) {
   mainElement = page.asInstanceOf[DomNode]
+
   def resolveNode(parent: DomNode): DomNode = mainElement
+
   def url = page.getUrl.toString
 }
 
-class FormProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class FormProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: id => { 
+      case dt: id =>
         parentElement.asInstanceOf[HtmlPage].
-                      getHtmlElementById[HtmlForm](dt.id) 
-      }
+          getHtmlElementById[HtmlForm](dt.id)
+      case dt: name =>
+        parentElement.asInstanceOf[HtmlPage].
+          getElementByName[HtmlForm](dt.name)
     }
   }
 }
 
-class InputProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class InputProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: name => { 
+      case dt: name =>
         parentElement.asInstanceOf[HtmlForm].
-                      getInputByName[HtmlInput](dt.name) 
-      }
-      case dt: id => { 
+          getInputByName[HtmlInput](dt.name)
+      case dt: id =>
         parentElement.asInstanceOf[HtmlElement]
-                     .getPage
-                     .asInstanceOf[HtmlPage]
-                     .getElementById[HtmlInput](dt.id, false) 
-      }
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlInput](dt.xPath) 
-      }
+          .getPage
+          .asInstanceOf[HtmlPage]
+          .getElementById[HtmlInput](dt.id, false)
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlInput](dt.xPath)
     }
   }
 }
 
-class AnchorProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class AnchorProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlAnchor](dt.xPath) 
-      }
-      case dt: text => {
-        parentElement.asInstanceOf[HtmlPage].getAnchorByText(dt.text) 
-      }
-      case dt: id => {
-        parentElement.asInstanceOf[HtmlPage].getElementById(dt.id) 
-      }
-      case dt: title => {
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlAnchor](dt.xPath)
+      case dt: text =>
+        parentElement.asInstanceOf[HtmlPage].getAnchorByText(dt.text)
+      case dt: id =>
+        parentElement.asInstanceOf[HtmlPage].getElementById(dt.id)
+      case dt: title =>
         parentElement.getFirstByXPath[HtmlAnchor](
           """//a[@title="%s"]""".format(dt.title)
         )
-      }
     }
   }
 }
 
-class ImageProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class ImageProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlImage](dt.xPath) 
-      }
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlImage](dt.xPath)
     }
   }
 }
 
-class DivProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class DivProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlDivision](dt.xPath) 
-      }
-      case dt: id => { 
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlDivision](dt.xPath)
+      case dt: id =>
         parentElement.asInstanceOf[HtmlPage].
-         getElementById(dt.id)
-      }
+          getElementById(dt.id)
     }
   }
 }
 
-class AreaProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class AreaProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlArea](dt.xPath) 
-      }
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlArea](dt.xPath)
     }
   }
 }
 
-class ParagraphProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class ParagraphProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlParagraph](dt.xPath) 
-      }
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlParagraph](dt.xPath)
     }
   }
 }
 
-class SpanProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class SpanProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlSpan](dt.xPath) 
-      }
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlSpan](dt.xPath)
     }
   }
 }
 
-class ScriptProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class ScriptProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlScript](dt.xPath) 
-      }
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlScript](dt.xPath)
     }
   }
 }
 
-class TableDataCellProcessor(c: Crawler, dType: DiscriminatorType) 
- extends ElementProcessor(c, dType) {
+class TableDataCellProcessor(c: Crawler, dType: DiscriminatorType)
+  extends ElementProcessor(c, dType) {
   def resolveNode(parentElement: DomNode): DomNode = {
     discriminatorType match {
-      case dt: xPath => { 
-        parentElement.getFirstByXPath[HtmlTableDataCell](dt.xPath) 
-      }
+      case dt: xPath =>
+        parentElement.getFirstByXPath[HtmlTableDataCell](dt.xPath)
     }
   }
 }
 
 trait CrawlObserver {
   def configure(m: java.util.Map[String, String])
+
   def click: crawler.PageProcessor
+
   def doCrawl()
 }
 
@@ -311,24 +306,23 @@ trait CrawlObserver {
  * that are part of the crawler DSL.
  */
 abstract class Crawler(
-  version: BrowserVersion = BrowserVersion.FIREFOX_17,
-  failOnJSError: Boolean = false,
-  javaScriptEnabled: Boolean = true,
-  cssEnabled: Boolean = false,
-  useInsecureSSL: Boolean = true
-) extends ElementProcessor with CrawlObserver
-{
- /**
-  * Set up the current Crawler as an implicit value that will be 
-  * automatically filled into a method call if not provided by the
-  * caller.  This was added in order to make the Crawler instance 
-  * implicitly available to the HTMLElement object definitions.
-  */
+                        version: BrowserVersion = BrowserVersion.FIREFOX_17,
+                        failOnJSError: Boolean = false,
+                        javaScriptEnabled: Boolean = true,
+                        cssEnabled: Boolean = false,
+                        useInsecureSSL: Boolean = true
+                        ) extends ElementProcessor with CrawlObserver {
+  /**
+   * Set up the current Crawler as an implicit value that will be
+   * automatically filled into a method call if not provided by the
+   * caller.  This was added in order to make the Crawler instance
+   * implicitly available to the HTMLElement object definitions.
+   */
   implicit val c: Crawler = this
 
- /**
-  * HtmlUnit class that actually does all the work.
-  */
+  /**
+   * HtmlUnit class that actually does all the work.
+   */
   private[this] val client = new WebClient(version)
 
   // Set the various switches to affect the behavior of this client.
@@ -336,59 +330,61 @@ abstract class Crawler(
   client.getOptions.setJavaScriptEnabled(javaScriptEnabled)
   client.getOptions.setUseInsecureSSL(useInsecureSSL)
   client.getOptions.setCssEnabled(cssEnabled)
-  if (! cssEnabled) {
+  if (!cssEnabled) {
     client.setCssErrorHandler(new SilentCssErrorHandler())
   }
 
   protected var config = collection.mutable.Map[String, Any]();
- 
- /**
-  * List of DomNode instances that functions as a stack.  As the 
-  * DSL finds nodes the user is allowed to embed operations to 
-  * perform on those nodes, including the discovery of sub-nodes
-  * within the current node.  Therefore, we need to store the
-  * notion of a current node on the stack so that when processing
-  * of the child nodes is complete we can restore this node 
-  * back into the current.
-  */
+
+  /**
+   * List of DomNode instances that functions as a stack.  As the
+   * DSL finds nodes the user is allowed to embed operations to
+   * perform on those nodes, including the discovery of sub-nodes
+   * within the current node.  Therefore, we need to store the
+   * notion of a current node on the stack so that when processing
+   * of the child nodes is complete we can restore this node
+   * back into the current.
+   */
   var nodeStack = List[DomNode]()
 
- /**
-  * Used by the navigateTo method to store the URL that the 
-  * user is trying to visit.
-  */
+  /**
+   * Used by the navigateTo method to store the URL that the
+   * user is trying to visit.
+   */
   private var currentUrl: String = ""
 
- /**
-  * Simple implemention of resolveNode, which will simply attempt
-  * to go to the page requested by the user.
-  */
+  /**
+   * Simple implemention of resolveNode, which will simply attempt
+   * to go to the page requested by the user.
+   */
   def resolveNode(parentElement: DomNode) = {
     client.getPage[SgmlPage](currentUrl)
   }
 
- /**
-  * Pushes a new DomNode onto the top of the stack.  This is called
-  * when the DSL has resolved a new node and now needs to push it
-  * onto the stack so that the next processing block will have
-  * access to it.
-  */
-  protected[crawler] def push(d: DomNode) = { 
-    nodeStack = d +: nodeStack 
+  /**
+   * Pushes a new DomNode onto the top of the stack.  This is called
+   * when the DSL has resolved a new node and now needs to push it
+   * onto the stack so that the next processing block will have
+   * access to it.
+   */
+  protected[crawler] def push(d: DomNode) = {
+    nodeStack = d +: nodeStack
   }
 
- /**
-  * Pops a DomNode off of the node stack.  Called when a process
-  * block for a node concludes, and we want to restore the previous
-  * node to the top of the stack.
-  */
-  protected[crawler] def pop() = { nodeStack = nodeStack drop 1 }
+  /**
+   * Pops a DomNode off of the node stack.  Called when a process
+   * block for a node concludes, and we want to restore the previous
+   * node to the top of the stack.
+   */
+  protected[crawler] def pop() = {
+    nodeStack = nodeStack drop 1
+  }
 
- /**
-  * Receives an ElementProcessor instance and the 
-  * block of code that is to be executed against the node that is resolved
-  * by that ElementProcessor.
-  */
+  /**
+   * Receives an ElementProcessor instance and the
+   * block of code that is to be executed against the node that is resolved
+   * by that ElementProcessor.
+   */
   private def processBlock(processor: ElementProcessor)(block: => Unit) = {
     // attempt to resolve the node,
     (
@@ -396,34 +392,36 @@ abstract class Crawler(
         case 0 => processor.resolveNode(null)
         case _ => processor.resolveNode(nodeStack.head)
       }
-    // then process the block.  If no node is resolved, skip the block.
-    ) match {
+      // then process the block.  If no node is resolved, skip the block.
+      ) match {
       case null =>
       case n: DomNode => push(n); block; pop()
     }
   }
 
- /** 
-  * Similar to the processBlock function, processList is a special case 
-  * function invoked by the forAll() token in this DSL.  Rather than resolve
-  * a single node, this method will resolve a list of nodes, iterate over them,
-  * and call the block of code that was passed in on each.
-  */
-  private def processList(processor: ElementProcessor)(block: => Unit) = { 
-    for(element <- processor.resolveList(nodeStack.head)) {
+  /**
+   * Similar to the processBlock function, processList is a special case
+   * function invoked by the forAll() token in this DSL.  Rather than resolve
+   * a single node, this method will resolve a list of nodes, iterate over them,
+   * and call the block of code that was passed in on each.
+   */
+  private def processList(processor: ElementProcessor)(block: => Unit) = {
+    for (element <- processor.resolveList(nodeStack.head)) {
       push(element.asInstanceOf[DomNode])
-      block 
+      block
       pop
     }
   }
 
- /**
-  * Method called by the push operator (==>) which has the effect of 
-  * pushing the node parameter onto the bottom of the stack so that
-  * when the stack has been emptied, there at the very bottom will 
-  * be this new node.
-  */
-  protected[crawler] def pushToEnd(node: DomNode) = { nodeStack :+= node }
+  /**
+   * Method called by the push operator (==>) which has the effect of
+   * pushing the node parameter onto the bottom of the stack so that
+   * when the stack has been emptied, there at the very bottom will
+   * be this new node.
+   */
+  protected[crawler] def pushToEnd(node: DomNode) = {
+    nodeStack :+= node
+  }
 
   def crawl()
 
@@ -432,13 +430,15 @@ abstract class Crawler(
     client.closeAllWindows()
   }
 
- /**
-  * For some crawls, additional configuration parameters will be passed 
-  * in post-instantiation.  This method is on the base Crawler class so that
-  * it may be called generically on any child class.  It is up to the 
-  * crawler implementation to validate and make use of the configuration.
-  */
-  override def configure(m: java.util.Map[String, String]) = { config ++= m }
+  /**
+   * For some crawls, additional configuration parameters will be passed
+   * in post-instantiation.  This method is on the base Crawler class so that
+   * it may be called generically on any child class.  It is up to the
+   * crawler implementation to validate and make use of the configuration.
+   */
+  override def configure(m: java.util.Map[String, String]) = {
+    config ++= m
+  }
 
   def navigateTo(url: String) = {
     currentUrl = url
@@ -446,7 +446,7 @@ abstract class Crawler(
   }
 
   def onCurrentPage(block: => Unit) = {
-    block 
+    block
     nodeStack = nodeStack drop 1
   }
 
@@ -458,9 +458,11 @@ abstract class Crawler(
     val stackItem = nodeStack.head
     val element = stackItem.asInstanceOf[HtmlElement]
     val clickResult = Await.result(
-                        Future { element.click[HtmlPage]() }
-                      , 60.second
-                      )
+      Future {
+        element.click[HtmlPage]()
+      }
+      , 60.second
+    )
     val start = (new java.util.Date).getTime
     val stillRunning = client.waitForBackgroundJavaScript(1000 /* ms */)
     println("waited %d ms for background JS, %d still running..."
@@ -505,7 +507,9 @@ abstract class Crawler(
   }
 
   @deprecated("Please use `println(page.asString)` instead.", "0.6.0")
-  def printPage() { println(page.asString) }
+  def printPage() {
+    println(page.asString)
+  }
 
   @deprecated(
     "Instead of `printElement(node)` please use `node.asString`.", "0.6.0"
