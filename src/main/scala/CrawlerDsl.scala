@@ -314,6 +314,7 @@ abstract class Crawler(
   version: BrowserVersion = BrowserVersion.FIREFOX_17,
   failOnJSError: Boolean = false,
   javaScriptEnabled: Boolean = true,
+  throwExceptionOnFailingStatusCode: Boolean = false,
   cssEnabled: Boolean = false,
   useInsecureSSL: Boolean = true
 ) extends ElementProcessor with CrawlObserver
@@ -334,6 +335,7 @@ abstract class Crawler(
   // Set the various switches to affect the behavior of this client.
   client.getOptions.setThrowExceptionOnScriptError(failOnJSError)
   client.getOptions.setJavaScriptEnabled(javaScriptEnabled)
+  client.getOptions.setThrowExceptionOnFailingStatusCode(throwExceptionOnFailingStatusCode)
   client.getOptions.setUseInsecureSSL(useInsecureSSL)
   client.getOptions.setCssEnabled(cssEnabled)
   if (! cssEnabled) {
