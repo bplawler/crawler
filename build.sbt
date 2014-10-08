@@ -9,6 +9,6 @@ scalaBinaryVersion := "2.10"
 scalacOptions := Seq("-deprecation", "-unchecked", "-feature")
 
 libraryDependencies ++= Seq (
-    "net.sourceforge.htmlunit" % "htmlunit" % "2.13"
+    "net.sourceforge.htmlunit" % "htmlunit" % "2.15"
   , "org.specs2" %% "specs2" % "1.14" % "test"
 )

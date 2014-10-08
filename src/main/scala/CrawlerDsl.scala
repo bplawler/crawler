@@ -311,7 +311,7 @@ trait CrawlObserver {
  * that are part of the crawler DSL.
  */
 abstract class Crawler(
-  version: BrowserVersion = BrowserVersion.FIREFOX_17,
+  version: BrowserVersion = BrowserVersion.FIREFOX_24,
   failOnJSError: Boolean = false,
   javaScriptEnabled: Boolean = true,
   throwExceptionOnFailingStatusCode: Boolean = false,
