@@ -170,6 +170,10 @@ class FormProcessor(c: Crawler, dType: DiscriminatorType)
         parentElement.asInstanceOf[HtmlPage].
                       getHtmlElementById[HtmlForm](dt.id) 
       }
+      case dt: name => { 
+        parentElement.asInstanceOf[HtmlPage].
+                      getElementByName[HtmlForm](dt.name) 
+      }
     }
   }
 }
