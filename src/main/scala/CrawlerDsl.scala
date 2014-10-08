@@ -451,6 +451,10 @@ abstract class Crawler(
     processBlock(this) _
   }
 
+  def retrieveUrl(url: String): Page = {
+    client.getPage[Page](url)
+  }
+
   def onCurrentPage(block: => Unit) = {
     block 
     nodeStack = nodeStack drop 1
