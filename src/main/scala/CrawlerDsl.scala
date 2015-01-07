@@ -469,7 +469,7 @@ abstract class Crawler(
     val element = stackItem.asInstanceOf[HtmlElement]
     val clickResult = Await.result(
                         Future { element.click[HtmlPage]() }
-                      , 60.second
+                      , 120.second
                       )
     val start = (new java.util.Date).getTime
     val stillRunning = client.waitForBackgroundJavaScript(1000 /* ms */)
