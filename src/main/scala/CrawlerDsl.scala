@@ -314,14 +314,14 @@ trait CrawlObserver {
  * starting point for navigation, and it also provides most of the tokens
  * that are part of the crawler DSL.
  */
-abstract class Crawler(
-  version: BrowserVersion = BrowserVersion.FIREFOX_24,
-  failOnJSError: Boolean = false,
-  javaScriptEnabled: Boolean = true,
-  throwExceptionOnFailingStatusCode: Boolean = false,
-  cssEnabled: Boolean = false,
-  useInsecureSSL: Boolean = true
-) extends ElementProcessor with CrawlObserver
+abstract class Crawler( version: BrowserVersion = BrowserVersion.FIREFOX_24
+                      , failOnJSError: Boolean = false
+                      , javaScriptEnabled: Boolean = true
+                      , throwExceptionOnFailingStatusCode: Boolean = false
+                      , cssEnabled: Boolean = false
+                      , useInsecureSSL: Boolean = true
+                      , dumpPreProcessedJavaScript: Boolean = false
+                      ) extends ElementProcessor with CrawlObserver
 {
  /**
   * Set up the current Crawler as an implicit value that will be 
@@ -344,6 +344,16 @@ abstract class Crawler(
   client.getOptions.setCssEnabled(cssEnabled)
   if (! cssEnabled) {
     client.setCssErrorHandler(new SilentCssErrorHandler())
+  }
+  val actualScriptPreProcessor = client.getScriptPreProcessor
+  lazy val debugScriptPreProcessor = new ScriptPreProcessor() {
+    def preProcess(htmlPage: HtmlPage, sourceCode: String, sourceName: String, lineNumber: Int, htmlElement: HtmlElement) = {
+      System.out.println(s"** preProcessing script: name <$sourceName> code <$sourceCode>")
+      actualScriptPreProcessor.preProcess(htmlPage, sourceCode, sourceName, lineNumber, htmlElement);
+    }
+  }
+  if(dumpPreProcessedJavaScript) {
+    client.setScriptPreProcessor(debugScriptPreProcessor)
   }
 
   protected var config = collection.mutable.Map[String, Any]();
