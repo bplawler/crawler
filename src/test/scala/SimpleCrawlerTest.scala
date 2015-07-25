@@ -1,34 +1,34 @@
-import org.specs._
+package crawler
 
-class TestCrawler extends Crawler {
+import org.specs2._
+import java.net.InetSocketAddress
+
+case class TestCrawler(url: String) extends Crawler {
   var result = ""
   def crawl = {
-    navigateTo("http://www.google.com") {
-      in(form having id("tsf")) {
-        in(textField having id("lst-ib")) {
+    navigateTo(url) {
+      in(form having id("simple_form")) {
+        in(input having id("simple_input")) {
           typeIn("bplawler")
         }
-        in(submit having name("btnK")) {
+        in(input having name("simple_button")) {
           click ==>
         }
       }
     }
     onCurrentPage {
-      result = from(div having id("resultStats")) getTextContent
-      
-      forAll(div having xPath("""//ol[@id = "rso"]/li/div[@class = "vsc"]""")) {
-        println(from(anchor having xPath("h3/a")) getTextContent)
-      }
+      result = from(div having id("result_stats")).getTextContent
     }
   }
 }
 
-object SimpleCrawlerTest extends Specification {
-  "Vanity Googling for bplawler" should {
-    val c = new TestCrawler
-    c.crawl
-    "give me search results that start with 'About'" in {
-      c.result must startWith("About")
+class SimpleCrawlerTest extends mutable.Specification with CrawlerSpec {
+  "crawler" should {
+    "work" in {
+      val c = TestCrawler(address)
+      c.crawl()
+      c.result must contain("(input_name,bplawler)")
+      ok
     }
   }
 }
