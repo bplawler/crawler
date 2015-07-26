@@ -1,0 +1,12 @@
+language: scala
+script: sbt +test
+deploy:
+  provider: script
+  script: sbt +publish
+  on:
+    tags: true
+    repo: 2m/crawler
+env:
+  global:
+  - secure: TMbPU4iI2EESfuUTAhULeO8k6kXAXALEkO3AbyWIE6Cz57MTeoc6VErq3rsjr3yGP/Z2TqXRNshMgDIkL9pHjeIYCpzJ8pwKTr/7d4Y80MvJCeTU7srI/wHi35PkVadyAyEv3YyE1FJDaSXb4BuYXvZxYD2XusR/Lxx5eS0oFCE= # BINTRAY_USER
+  - secure: O2rcbXoHoAN4hVRENtRI/s91TzL/gHgKYXyi9eCxmqGxj+lj8vcBU0umLbT+9i7tctlLZHZPM7Jx95lqTgNVYnRmfVzbv0VFIedH6hFnuZsj5zfL6cyryd2reO2yOfDrKa2XYnjRBK2X0DEnGzWEqOj8kaKLupgWC9rqqCU2z6c= # BINTRAY_PASS
