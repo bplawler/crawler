@@ -48,6 +48,11 @@ object div {
     new DivProcessor(c, dType)
 }
 
+object li {
+  def having(dType: DiscriminatorType)(implicit c: Crawler) = 
+    new LiProcessor(c, dType)
+}
+
 object area {
   def having(dType: DiscriminatorType)(implicit c: Crawler) = 
     new AreaProcessor(c, dType)
@@ -227,6 +232,17 @@ class ImageProcessor(c: Crawler, dType: DiscriminatorType)
     discriminatorType match {
       case dt: xPath => { 
         parentElement.getFirstByXPath[HtmlImage](dt.xPath) 
+      }
+    }
+  }
+}
+
+class LiProcessor(c: Crawler, dType: DiscriminatorType) 
+ extends ElementProcessor(c, dType) {
+  def resolveNode(parentElement: DomNode): DomNode = {
+    discriminatorType match {
+      case dt: xPath => { 
+        parentElement.getFirstByXPath[HtmlListItem](dt.xPath) 
       }
     }
   }
